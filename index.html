@@ -1,25 +1,29 @@
 <!DOCTYPE html>
-<html lang="Pt-br">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./src//style/style.css">
+    <link rel="stylesheet" href="src/style/style.css">
     <title>FabricaBattle</title>
 </head>
 
 <body>
-    <h1 id="title"></h1>
+    <h1 id="title">FabricaBattle</h1>
     <main>
-        <div class="game-center">
+        <div class="game-center" id="menu">
             <h2>Menu</h2>
             <div class="game-options">
-                <button class="option-button">Jogar</button>
+                <button class="option-button" id="play-button">Jogar</button>
                 <button class="option-button">Selecionar personagem</button>
             </div>
         </div>
     </main>
-    <script src="./src/script/script.js"></script>
+    <script>
+        document.getElementById('play-button').addEventListener('click', () => {
+            window.location.href = 'src/pages/game.html';
+        });
+    </script>
 </body>
 
 </html>
