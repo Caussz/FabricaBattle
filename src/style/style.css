@@ -35,6 +35,7 @@ h1 {
     height: 100vh;
     background-color: green;
     position: relative;
+    overflow: hidden; /* Adiciona isso para evitar barras de rolagem */
 }
 
 .player {
@@ -47,8 +48,16 @@ h1 {
     transform: translate(-50%, -50%);
 }
 
+.bullet {
+    width: 5px;
+    height: 5px;
+    background-color: red;
+    position: absolute;
+    border-radius: 50%;
+}
+
 .pause-menu {
-    display: none;
+    display: none; /* Inicialmente oculto */
     position: fixed;
     top: 50%;
     left: 50%;
