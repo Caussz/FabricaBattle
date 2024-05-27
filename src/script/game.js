@@ -124,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const obstacleSize = Math.floor(Math.random() * 50) + 30;
         obstacle.style.width = `${obstacleSize}px`;
         obstacle.style.height = `${obstacleSize}px`;
+        obstacle.style.position = 'absolute';
 
         let left, top;
         do {
@@ -133,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         obstacle.style.left = `${left}px`;
         obstacle.style.top = `${top}px`;
-
+console.log(left);
         gameField.appendChild(obstacle);
     };
 
