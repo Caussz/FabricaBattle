@@ -134,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         obstacle.style.left = `${left}px`;
         obstacle.style.top = `${top}px`;
-console.log(left);
         gameField.appendChild(obstacle);
     };
 
