@@ -31,11 +31,13 @@ h1 {
 }
 
 .game-field {
+    background-image: url("../assets/image.jpg");
+    background-repeat: repeat;
     width: 100vw;
     height: 100vh;
     background-color: green;
     position: relative;
-    overflow: hidden; /* Adiciona isso para evitar barras de rolagem */
+    overflow: hidden;
 }
 
 .player {
@@ -57,7 +59,7 @@ h1 {
 }
 
 .pause-menu {
-    display: none; /* Inicialmente oculto */
+    display: none;
     position: fixed;
     top: 50%;
     left: 50%;
