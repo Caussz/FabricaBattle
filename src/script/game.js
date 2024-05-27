@@ -13,23 +13,31 @@ document.addEventListener('DOMContentLoaded', () => {
         step: 5,
         moveLeft() {
             const left = parseInt(window.getComputedStyle(player).left);
-            player.style.left = `${left - this.step}px`;
-            lastDirection = 'left';
+            if (left > 0 && !isCollidingWithObstacle(left - this.step, parseInt(window.getComputedStyle(player).top))) {
+                player.style.left = `${left - this.step}px`;
+                lastDirection = 'left';
+            }
         },
         moveRight() {
             const left = parseInt(window.getComputedStyle(player).left);
-            player.style.left = `${left + this.step}px`;
-            lastDirection = 'right';
+            if (left < gameField.offsetWidth - player.offsetWidth && !isCollidingWithObstacle(left + this.step, parseInt(window.getComputedStyle(player).top))) {
+                player.style.left = `${left + this.step}px`;
+                lastDirection = 'right';
+            }
         },
         moveUp() {
             const top = parseInt(window.getComputedStyle(player).top);
-            player.style.top = `${top - this.step}px`;
-            lastDirection = 'up';
+            if (top > 0 && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top - this.step)) {
+                player.style.top = `${top - this.step}px`;
+                lastDirection = 'up';
+            }
         },
         moveDown() {
             const top = parseInt(window.getComputedStyle(player).top);
-            player.style.top = `${top + this.step}px`;
-            lastDirection = 'down';
+            if (top < gameField.offsetHeight - player.offsetHeight && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top + this.step)) {
+                player.style.top = `${top + this.step}px`;
+                lastDirection = 'down';
+            }
         }
     };
 
@@ -98,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bulletRect = bullet.getBoundingClientRect();
             if (
                 bulletRect.left < 0 ||
-                bulletRect.right > window.innerWidth ||
+                bullet                .Rect.right > window.innerWidth ||
                 bulletRect.top < 0 ||
                 bulletRect.bottom > window.innerHeight
             ) {
@@ -106,6 +114,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 bullet.remove();
             }
         }, 1000 / 60);
+    };
+
+    const createObstacle = () => {
+        const obstacle = document.createElement('div');
+        obstacle.classList.add('obstacle');
+        obstacle.style.backgroundColor = 'brown';
+
+        const obstacleSize = Math.floor(Math.random() * 50) + 30;
+        obstacle.style.width = `${obstacleSize}px`;
+        obstacle.style.height = `${obstacleSize}px`;
+
+        let left, top;
+        do {
+            left = Math.floor(Math.random() * (gameField.offsetWidth - obstacleSize));
+            top = Math.floor(Math.random() * (gameField.offsetHeight - obstacleSize));
+        } while (isTooClose(left, top, obstacleSize));
+
+        obstacle.style.left = `${left}px`;
+        obstacle.style.top = `${top}px`;
+
+        gameField.appendChild(obstacle);
+    };
+
+    const isTooClose = (left, top, size) => {
+        const obstacles = document.querySelectorAll('.obstacle');
+        for (const obstacle of obstacles) {
+            const rect = obstacle.getBoundingClientRect();
+            const obstacleCenterX = rect.left + rect.width / 2;
+            const obstacleCenterY = rect.top + rect.height / 2;
+
+            const distance = Math.sqrt((left - obstacleCenterX) ** 2 + (top - obstacleCenterY) ** 2);
+            if (distance < size + rect.width / 2 + 50) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+
+
+    const isCollidingWithObstacle = (left, top) => {
+        const playerRect = player.getBoundingClientRect();
+        const playerCenterX = playerRect.left + playerRect.width / 2;
+        const playerCenterY = playerRect.top + playerRect.height / 2;
+
+        const obstacles = document.querySelectorAll('.obstacle');
+        for (const obstacle of obstacles) {
+            const obstacleRect = obstacle.getBoundingClientRect();
+            if (
+                left < obstacleRect.right &&
+                left + playerRect.width > obstacleRect.left &&
+                top < obstacleRect.bottom &&
+                top + playerRect.height > obstacleRect.top
+            ) {
+                return true;
+            }
+        }
+        return false;
     };
 
     const handleMouseClick = () => {
@@ -125,5 +191,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    setupEventListeners();
+    const setupGame = () => {
+        for (let i = 0; i < 10; i++) {
+            createObstacle();
+        }
+        setupEventListeners();
+    };
+
+    setupGame();
 });
+
