@@ -2,10 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const player = document.getElementById('player');
     const gameField = document.querySelector('.game-field');
     const pauseMenu = document.getElementById('pause-menu');
+    const shopMenu = document.getElementById('shop-menu');
     const resumeButton = document.getElementById('resume-button');
     const backToMenuButton = document.getElementById('back-to-menu-button');
+    const closeShopButton = document.getElementById('close-shop-button');
 
     let isPaused = false;
+    let isShopOpen = false;
     let lastDirection = 'right';
     let bulletId = 0;
     let bulletCount = 0;
@@ -66,6 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
         pauseMenu.style.display = isPaused ? 'block' : 'none';
     };
 
+    const toggleShop = () => {
+        isShopOpen = !isShopOpen;
+        shopMenu.style.display = isShopOpen ? 'block' : 'none';
+    };
+
     const handleKeydown = (event) => {
         if (isPaused && event.key !== 'Escape') return;
 
@@ -84,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'escape':
                 togglePause();
+                break;
+            case 'b':
+                toggleShop();
                 break;
         }
     };
@@ -173,13 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const createObstacle = () => {
         const obstacle = document.createElement('div');
         obstacle.classList.add('obstacle');
+        obstacle.dataset.health = 10;
         obstacle.style.backgroundColor = 'brown';
 
         const obstacleSize = Math.floor(Math.random() * 50) + 30;
         obstacle.style.width = `${obstacleSize}px`;
         obstacle.style.height = `${obstacleSize}px`;
         obstacle.style.position = 'absolute';
-        obstacle.dataset.health = 20;
 
         let left, top;
         do {
@@ -189,17 +200,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         obstacle.style.left = `${left}px`;
         obstacle.style.top = `${top}px`;
+        gameField.appendChild(obstacle);
+
+        const healthBarContainer = document.createElement('div');
+        healthBarContainer.classList.add('health-bar-container');
+        healthBarContainer.style.position = 'absolute';
+        healthBarContainer.style.width = '100%';
+        healthBarContainer.style.height = '5px';
+        healthBarContainer.style.bottom = '0';
+        healthBarContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        obstacle.appendChild(healthBarContainer);
 
         const healthBar = document.createElement('div');
         healthBar.classList.add('health-bar');
         healthBar.style.width = '100%';
-        healthBar.style.height = '5px';
-        healthBar.style.backgroundColor = 'red';
-        healthBar.style.position = 'absolute';
-        healthBar.style.bottom = '0';
-        obstacle.appendChild(healthBar);
-
-        gameField.appendChild(obstacle);
+        healthBar.style.height = '100%';
+        healthBar.style.backgroundColor = 'green';
+        healthBarContainer.appendChild(healthBar);
     };
 
     const isTooClose = (left, top, size) => {
@@ -256,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleMouseClick = () => {
-        if (isPaused) return;
+        if (isPaused || isShopOpen) return;
 
         const bullet = createBullet();
         bullet.dataset.direction = lastDirection;
@@ -305,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         backToMenuButton.addEventListener('click', () => {
             window.location.href = '../../index.html';
         });
+        closeShopButton.addEventListener('click', toggleShop);
     };
 
     const setupGame = () => {
