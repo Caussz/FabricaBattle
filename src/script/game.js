@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resumeButton = document.getElementById('resume-button');
     const backToMenuButton = document.getElementById('back-to-menu-button');
     const closeShopButton = document.getElementById('close-shop-button');
+    const specialPowerIndicator = document.getElementById('special-power-indicator');
 
     let isPaused = false;
     let isShopOpen = false;
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let bulletId = 0;
     let bulletCount = 0;
     let coinCount = 0;
+    let specialPowerAvailable = true;
 
     const coinCounter = document.createElement('div');
     coinCounter.style.position = 'absolute';
@@ -96,6 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'b':
                 toggleShop();
                 break;
+            case 'e':
+                if (specialPowerAvailable) {
+                    useSpecialPower();
+                }
+                break;
         }
     };
 
@@ -157,25 +164,102 @@ document.addEventListener('DOMContentLoaded', () => {
                 ) {
                     clearInterval(interval);
                     bullet.remove();
-                    applyDamage(obstacle);
-                    return;
+                    handleObstacleDamage(obstacle);
+                    break;
                 }
             }
-        }, 1000 / 60);
+        }, 50);
     };
 
-    const applyDamage = (obstacle) => {
-        const damage = (bulletCount % 5 === 0) ? 3 : 1;
-        let currentHealth = parseInt(obstacle.dataset.health);
-        currentHealth -= damage;
-        obstacle.dataset.health = currentHealth;
+    const createSpecialPower = () => {
+        const specialPower = document.createElement('div');
+        specialPower.classList.add('special-power');
+        gameField.appendChild(specialPower);
+
+        const playerRect = player.getBoundingClientRect();
+        specialPower.style.left = `${playerRect.left + playerRect.width / 2 - 5}px`;
+        specialPower.style.top = `${playerRect.top + playerRect.height / 2 - 5}px`;
+
+        return specialPower;
+    };
+
+    const moveSpecialPower = (specialPower) => {
+        const specialPowerSpeed = 15;
+        const interval = setInterval(() => {
+            if (isPaused) return;
+
+            let specialPowerRect = specialPower.getBoundingClientRect();
+
+            switch (specialPower.dataset.direction) {
+                case 'left':
+                    specialPower.style.left = `${specialPowerRect.left - specialPowerSpeed}px`;
+                    break;
+                case 'right':
+                    specialPower.style.left = `${specialPowerRect.left + specialPowerSpeed}px`;
+                    break;
+                case 'up':
+                    specialPower.style.top = `${specialPowerRect.top - specialPowerSpeed}px`;
+                    break;
+                case 'down':
+                    specialPower.style.top = `${specialPowerRect.top + specialPowerSpeed}px`;
+                    break;
+            }
+
+            specialPowerRect = specialPower.getBoundingClientRect();
+            if (
+                specialPowerRect.left < 0 ||
+                specialPowerRect.right > window.innerWidth ||
+                specialPowerRect.top < 0 ||
+                specialPowerRect.bottom > window.innerHeight
+            ) {
+                clearInterval(interval);
+                specialPower.remove();
+                return;
+            }
+
+            const obstacles = document.querySelectorAll('.obstacle');
+            for (const obstacle of obstacles) {
+                const obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    specialPowerRect.left < obstacleRect.right &&
+                    specialPowerRect.right > obstacleRect.left &&
+                    specialPowerRect.top < obstacleRect.bottom &&
+                    specialPowerRect.bottom > obstacleRect.top
+                ) {
+                    clearInterval(interval);
+                    specialPower.remove();
+                    obstacle.remove();
+                    generateCoins(obstacle);
+                    break;
+                }
+            }
+        }, 50);
+    };
+
+    const useSpecialPower = () => {
+        const specialPower = createSpecialPower();
+        specialPower.dataset.direction = lastDirection;
+        moveSpecialPower(specialPower);
+        specialPowerAvailable = false;
+        specialPowerIndicator.classList.add('disabled');
+        specialPowerIndicator.innerText = 'E não disponível';
+
+        setTimeout(() => {
+            specialPowerAvailable = true;
+            specialPowerIndicator.classList.remove('disabled');
+            specialPowerIndicator.innerText = 'E disponível';
+        }, 90000); // 1.5 minutos em milissegundos
+    };
+
+    const handleObstacleDamage = (obstacle) => {
+        let health = parseInt(obstacle.dataset.health);
+        health -= 1;
+        obstacle.dataset.health = health;
 
         const healthBar = obstacle.querySelector('.health-bar');
-        if (healthBar) {
-            healthBar.style.width = `${currentHealth * 5}%`;
-        }
+        healthBar.style.width = `${(health / 10) * 100}%`;
 
-        if (currentHealth <= 0) {
+        if (health <= 0) {
             generateCoins(obstacle);
             obstacle.remove();
         }
