@@ -8,6 +8,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPaused = false;
     let lastDirection = 'right';
     let bulletId = 0;
+    let bulletCount = 0;
+    let coinCount = 0;
+
+    const coinCounter = document.createElement('div');
+    coinCounter.style.position = 'absolute';
+    coinCounter.style.top = '10px';
+    coinCounter.style.right = '10px';
+    coinCounter.style.color = 'white';
+    coinCounter.style.fontSize = '20px';
+    coinCounter.style.fontFamily = 'Arial, sans-serif';
+    coinCounter.innerText = `Moedas: ${coinCount}`;
+    document.body.appendChild(coinCounter);
+
+    const updateCoinCounter = () => {
+        coinCounter.innerText = `Moedas: ${coinCount}`;
+    };
 
     const playerMovement = {
         step: 5,
@@ -16,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (left > 0 && !isCollidingWithObstacle(left - this.step, parseInt(window.getComputedStyle(player).top))) {
                 player.style.left = `${left - this.step}px`;
                 lastDirection = 'left';
+                checkCoinCollision();
             }
         },
         moveRight() {
@@ -23,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (left < gameField.offsetWidth - player.offsetWidth && !isCollidingWithObstacle(left + this.step, parseInt(window.getComputedStyle(player).top))) {
                 player.style.left = `${left + this.step}px`;
                 lastDirection = 'right';
+                checkCoinCollision();
             }
         },
         moveUp() {
@@ -30,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (top > 0 && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top - this.step)) {
                 player.style.top = `${top - this.step}px`;
                 lastDirection = 'up';
+                checkCoinCollision();
             }
         },
         moveDown() {
@@ -37,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (top < gameField.offsetHeight - player.offsetHeight && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top + this.step)) {
                 player.style.top = `${top + this.step}px`;
                 lastDirection = 'down';
+                checkCoinCollision();
             }
         }
     };
@@ -106,14 +126,48 @@ document.addEventListener('DOMContentLoaded', () => {
             bulletRect = bullet.getBoundingClientRect();
             if (
                 bulletRect.left < 0 ||
-                bullet                .Rect.right > window.innerWidth ||
+                bulletRect.right > window.innerWidth ||
                 bulletRect.top < 0 ||
                 bulletRect.bottom > window.innerHeight
             ) {
                 clearInterval(interval);
                 bullet.remove();
+                return;
+            }
+
+            const obstacles = document.querySelectorAll('.obstacle');
+            for (const obstacle of obstacles) {
+                const obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    bulletRect.left < obstacleRect.right &&
+                    bulletRect.right > obstacleRect.left &&
+                    bulletRect.top < obstacleRect.bottom &&
+                    bulletRect.bottom > obstacleRect.top
+                ) {
+                    clearInterval(interval);
+                    bullet.remove();
+                    applyDamage(obstacle);
+                    return;
+                }
             }
         }, 1000 / 60);
+    };
+
+    const applyDamage = (obstacle) => {
+        const damage = (bulletCount % 5 === 0) ? 3 : 1;
+        let currentHealth = parseInt(obstacle.dataset.health);
+        currentHealth -= damage;
+        obstacle.dataset.health = currentHealth;
+
+        const healthBar = obstacle.querySelector('.health-bar');
+        if (healthBar) {
+            healthBar.style.width = `${currentHealth * 5}%`;
+        }
+
+        if (currentHealth <= 0) {
+            generateCoins(obstacle);
+            obstacle.remove();
+        }
     };
 
     const createObstacle = () => {
@@ -125,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         obstacle.style.width = `${obstacleSize}px`;
         obstacle.style.height = `${obstacleSize}px`;
         obstacle.style.position = 'absolute';
+        obstacle.dataset.health = 20;
 
         let left, top;
         do {
@@ -134,6 +189,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         obstacle.style.left = `${left}px`;
         obstacle.style.top = `${top}px`;
+
+        const healthBar = document.createElement('div');
+        healthBar.classList.add('health-bar');
+        healthBar.style.width = '100%';
+        healthBar.style.height = '5px';
+        healthBar.style.backgroundColor = 'red';
+        healthBar.style.position = 'absolute';
+        healthBar.style.bottom = '0';
+        obstacle.appendChild(healthBar);
+
         gameField.appendChild(obstacle);
     };
 
@@ -151,8 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return false;
     };
-
-
 
     const isCollidingWithObstacle = (left, top) => {
         const playerRect = player.getBoundingClientRect();
@@ -174,12 +237,65 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     };
 
+    const checkCoinCollision = () => {
+        const playerRect = player.getBoundingClientRect();
+        const coins = document.querySelectorAll('.coin');
+        coins.forEach(coin => {
+            const coinRect = coin.getBoundingClientRect();
+            if (
+                playerRect.left < coinRect.right &&
+                playerRect.right > coinRect.left &&
+                playerRect.top < coinRect.bottom &&
+                playerRect.bottom > coinRect.top
+            ) {
+                coin.remove();
+                coinCount++;
+                updateCoinCounter();
+            }
+        });
+    };
+
     const handleMouseClick = () => {
         if (isPaused) return;
 
         const bullet = createBullet();
         bullet.dataset.direction = lastDirection;
         moveBullet(bullet);
+        bulletCount++;
+    };
+
+    const createCoin = (left, top) => {
+        const coin = document.createElement('div');
+        coin.classList.add('coin');
+        coin.style.width = '20px';
+        coin.style.height = '20px';
+        coin.style.backgroundColor = 'gold';
+        coin.style.position = 'absolute';
+        coin.style.borderRadius = '50%';
+        coin.style.left = `${left}px`;
+        coin.style.top = `${top}px`;
+        gameField.appendChild(coin);
+    };
+
+    const generateCoins = (obstacle) => {
+        const numCoins = Math.floor(Math.random() * 3) + 1;
+        const obstacleRect = obstacle.getBoundingClientRect();
+        for (let i = 0; i < numCoins; i++) {
+            const left = obstacleRect.left + Math.random() * obstacleRect.width;
+            const top = obstacleRect.top + Math.random() * obstacleRect.height;
+            createCoin(left, top);
+        }
+    };
+
+    const createRandomCoins = (numCoins) => {
+        for (let i = 0; i < numCoins; i++) {
+            let left, top;
+            do {
+                left = Math.floor(Math.random() * (gameField.offsetWidth - 20));
+                top = Math.floor(Math.random() * (gameField.offsetHeight - 20));
+            } while (isTooClose(left, top, 20));
+            createCoin(left, top);
+        }
     };
 
     const setupEventListeners = () => {
@@ -195,9 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 10; i++) {
             createObstacle();
         }
+        createRandomCoins(10);
         setupEventListeners();
     };
 
     setupGame();
 });
-
