@@ -9,6 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastDirection = 'right';
     let bulletId = 0;
     let bulletCount = 0;
+    let coinCount = 0;
+
+    const coinCounter = document.createElement('div');
+    coinCounter.style.position = 'absolute';
+    coinCounter.style.top = '10px';
+    coinCounter.style.right = '10px';
+    coinCounter.style.color = 'white';
+    coinCounter.style.fontSize = '20px';
+    coinCounter.style.fontFamily = 'Arial, sans-serif';
+    coinCounter.innerText = `Moedas: ${coinCount}`;
+    document.body.appendChild(coinCounter);
+
+    const updateCoinCounter = () => {
+        coinCounter.innerText = `Moedas: ${coinCount}`;
+    };
 
     const playerMovement = {
         step: 5,
@@ -17,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (left > 0 && !isCollidingWithObstacle(left - this.step, parseInt(window.getComputedStyle(player).top))) {
                 player.style.left = `${left - this.step}px`;
                 lastDirection = 'left';
+                checkCoinCollision();
             }
         },
         moveRight() {
@@ -24,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (left < gameField.offsetWidth - player.offsetWidth && !isCollidingWithObstacle(left + this.step, parseInt(window.getComputedStyle(player).top))) {
                 player.style.left = `${left + this.step}px`;
                 lastDirection = 'right';
+                checkCoinCollision();
             }
         },
         moveUp() {
@@ -31,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (top > 0 && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top - this.step)) {
                 player.style.top = `${top - this.step}px`;
                 lastDirection = 'up';
+                checkCoinCollision();
             }
         },
         moveDown() {
@@ -38,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (top < gameField.offsetHeight - player.offsetHeight && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top + this.step)) {
                 player.style.top = `${top + this.step}px`;
                 lastDirection = 'down';
+                checkCoinCollision();
             }
         }
     };
@@ -218,13 +237,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     };
 
+    const checkCoinCollision = () => {
+        const playerRect = player.getBoundingClientRect();
+        const coins = document.querySelectorAll('.coin');
+        coins.forEach(coin => {
+            const coinRect = coin.getBoundingClientRect();
+            if (
+                playerRect.left < coinRect.right &&
+                playerRect.right > coinRect.left &&
+                playerRect.top < coinRect.bottom &&
+                playerRect.bottom > coinRect.top
+            ) {
+                coin.remove();
+                coinCount++;
+                updateCoinCounter();
+            }
+        });
+    };
+
     const handleMouseClick = () => {
         if (isPaused) return;
 
         const bullet = createBullet();
         bullet.dataset.direction = lastDirection;
-        bulletCount++;
         moveBullet(bullet);
+        bulletCount++;
     };
 
     const createCoin = (left, top) => {
@@ -232,22 +269,21 @@ document.addEventListener('DOMContentLoaded', () => {
         coin.classList.add('coin');
         coin.style.width = '20px';
         coin.style.height = '20px';
-        coin.style.backgroundColor = 'yellow';
-        coin.style.borderRadius = '50%';
+        coin.style.backgroundColor = 'gold';
         coin.style.position = 'absolute';
+        coin.style.borderRadius = '50%';
         coin.style.left = `${left}px`;
         coin.style.top = `${top}px`;
         gameField.appendChild(coin);
     };
 
     const generateCoins = (obstacle) => {
-        const obstacleRect = obstacle.getBoundingClientRect();
         const numCoins = Math.floor(Math.random() * 3) + 1;
-
+        const obstacleRect = obstacle.getBoundingClientRect();
         for (let i = 0; i < numCoins; i++) {
-            const coinLeft = obstacleRect.left + Math.random() * obstacleRect.width;
-            const coinTop = obstacleRect.top + Math.random() * obstacleRect.height;
-            createCoin(coinLeft, coinTop);
+            const left = obstacleRect.left + Math.random() * obstacleRect.width;
+            const top = obstacleRect.top + Math.random() * obstacleRect.height;
+            createCoin(left, top);
         }
     };
 
