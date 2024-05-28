@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPaused = false;
     let lastDirection = 'right';
     let bulletId = 0;
+    let bulletCount = 0;
 
     const playerMovement = {
         step: 5,
@@ -106,14 +107,48 @@ document.addEventListener('DOMContentLoaded', () => {
             bulletRect = bullet.getBoundingClientRect();
             if (
                 bulletRect.left < 0 ||
-                bullet                .Rect.right > window.innerWidth ||
+                bulletRect.right > window.innerWidth ||
                 bulletRect.top < 0 ||
                 bulletRect.bottom > window.innerHeight
             ) {
                 clearInterval(interval);
                 bullet.remove();
+                return;
+            }
+
+            const obstacles = document.querySelectorAll('.obstacle');
+            for (const obstacle of obstacles) {
+                const obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    bulletRect.left < obstacleRect.right &&
+                    bulletRect.right > obstacleRect.left &&
+                    bulletRect.top < obstacleRect.bottom &&
+                    bulletRect.bottom > obstacleRect.top
+                ) {
+                    clearInterval(interval);
+                    bullet.remove();
+                    applyDamage(obstacle);
+                    return;
+                }
             }
         }, 1000 / 60);
+    };
+
+    const applyDamage = (obstacle) => {
+        const damage = (bulletCount % 5 === 0) ? 3 : 1;
+        let currentHealth = parseInt(obstacle.dataset.health);
+        currentHealth -= damage;
+        obstacle.dataset.health = currentHealth;
+
+        const healthBar = obstacle.querySelector('.health-bar');
+        if (healthBar) {
+            healthBar.style.width = `${currentHealth * 5}%`;
+        }
+
+        if (currentHealth <= 0) {
+            generateCoins(obstacle);
+            obstacle.remove();
+        }
     };
 
     const createObstacle = () => {
@@ -125,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         obstacle.style.width = `${obstacleSize}px`;
         obstacle.style.height = `${obstacleSize}px`;
         obstacle.style.position = 'absolute';
+        obstacle.dataset.health = 20;
 
         let left, top;
         do {
@@ -134,6 +170,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         obstacle.style.left = `${left}px`;
         obstacle.style.top = `${top}px`;
+
+        const healthBar = document.createElement('div');
+        healthBar.classList.add('health-bar');
+        healthBar.style.width = '100%';
+        healthBar.style.height = '5px';
+        healthBar.style.backgroundColor = 'red';
+        healthBar.style.position = 'absolute';
+        healthBar.style.bottom = '0';
+        obstacle.appendChild(healthBar);
+
         gameField.appendChild(obstacle);
     };
 
@@ -151,8 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return false;
     };
-
-
 
     const isCollidingWithObstacle = (left, top) => {
         const playerRect = player.getBoundingClientRect();
@@ -179,7 +223,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const bullet = createBullet();
         bullet.dataset.direction = lastDirection;
+        bulletCount++;
         moveBullet(bullet);
+    };
+
+    const createCoin = (left, top) => {
+        const coin = document.createElement('div');
+        coin.classList.add('coin');
+        coin.style.width = '20px';
+        coin.style.height = '20px';
+        coin.style.backgroundColor = 'yellow';
+        coin.style.borderRadius = '50%';
+        coin.style.position = 'absolute';
+        coin.style.left = `${left}px`;
+        coin.style.top = `${top}px`;
+        gameField.appendChild(coin);
+    };
+
+    const generateCoins = (obstacle) => {
+        const obstacleRect = obstacle.getBoundingClientRect();
+        const numCoins = Math.floor(Math.random() * 3) + 1;
+
+        for (let i = 0; i < numCoins; i++) {
+            const coinLeft = obstacleRect.left + Math.random() * obstacleRect.width;
+            const coinTop = obstacleRect.top + Math.random() * obstacleRect.height;
+            createCoin(coinLeft, coinTop);
+        }
+    };
+
+    const createRandomCoins = (numCoins) => {
+        for (let i = 0; i < numCoins; i++) {
+            let left, top;
+            do {
+                left = Math.floor(Math.random() * (gameField.offsetWidth - 20));
+                top = Math.floor(Math.random() * (gameField.offsetHeight - 20));
+            } while (isTooClose(left, top, 20));
+            createCoin(left, top);
+        }
     };
 
     const setupEventListeners = () => {
@@ -195,9 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 10; i++) {
             createObstacle();
         }
+        createRandomCoins(10);
         setupEventListeners();
     };
 
     setupGame();
 });
-
