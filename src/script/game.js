@@ -32,37 +32,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const playerMovement = {
         step: 5,
-        moveLeft() {
+        directions: { left: false, right: false, up: false, down: false },
+        move() {
             const left = parseInt(window.getComputedStyle(player).left);
-            if (left > 0 && !isCollidingWithObstacle(left - this.step, parseInt(window.getComputedStyle(player).top))) {
+            const top = parseInt(window.getComputedStyle(player).top);
+            if (this.directions.left && left > 0 && !isCollidingWithObstacle(left - this.step, top)) {
                 player.style.left = `${left - this.step}px`;
                 lastDirection = 'left';
-                checkCoinCollision();
             }
-        },
-        moveRight() {
-            const left = parseInt(window.getComputedStyle(player).left);
-            if (left < gameField.offsetWidth - player.offsetWidth && !isCollidingWithObstacle(left + this.step, parseInt(window.getComputedStyle(player).top))) {
+            if (this.directions.right && left < gameField.offsetWidth - player.offsetWidth && !isCollidingWithObstacle(left + this.step, top)) {
                 player.style.left = `${left + this.step}px`;
                 lastDirection = 'right';
-                checkCoinCollision();
             }
-        },
-        moveUp() {
-            const top = parseInt(window.getComputedStyle(player).top);
-            if (top > 0 && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top - this.step)) {
+            if (this.directions.up && top > 0 && !isCollidingWithObstacle(left, top - this.step)) {
                 player.style.top = `${top - this.step}px`;
                 lastDirection = 'up';
-                checkCoinCollision();
             }
-        },
-        moveDown() {
-            const top = parseInt(window.getComputedStyle(player).top);
-            if (top < gameField.offsetHeight - player.offsetHeight && !isCollidingWithObstacle(parseInt(window.getComputedStyle(player).left), top + this.step)) {
+            if (this.directions.down && top < gameField.offsetHeight - player.offsetHeight && !isCollidingWithObstacle(left, top + this.step)) {
                 player.style.top = `${top + this.step}px`;
                 lastDirection = 'down';
-                checkCoinCollision();
             }
+            checkCoinCollision();
         }
     };
 
@@ -81,16 +71,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         switch (event.key.toLowerCase()) {
             case 'a':
-                playerMovement.moveLeft();
+                playerMovement.directions.left = true;
                 break;
             case 'd':
-                playerMovement.moveRight();
+                playerMovement.directions.right = true;
                 break;
             case 'w':
-                playerMovement.moveUp();
+                playerMovement.directions.up = true;
                 break;
             case 's':
-                playerMovement.moveDown();
+                playerMovement.directions.down = true;
                 break;
             case 'escape':
                 togglePause();
@@ -102,6 +92,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (specialPowerAvailable) {
                     useSpecialPower();
                 }
+                break;
+        }
+    };
+
+    const handleKeyup = (event) => {
+        switch (event.key.toLowerCase()) {
+            case 'a':
+                playerMovement.directions.left = false;
+                break;
+            case 'd':
+                playerMovement.directions.right = false;
+                break;
+            case 'w':
+                playerMovement.directions.up = false;
+                break;
+            case 's':
+                playerMovement.directions.down = false;
                 break;
         }
     };
@@ -401,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setupEventListeners = () => {
         document.addEventListener('keydown', handleKeydown);
+        document.addEventListener('keyup', handleKeyup);
         document.addEventListener('click', handleMouseClick);
         resumeButton.addEventListener('click', togglePause);
         backToMenuButton.addEventListener('click', () => {
@@ -415,6 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         createRandomCoins(10);
         setupEventListeners();
+        setInterval(() => {
+            if (!isPaused) playerMovement.move();
+        }, 20);
     };
 
     setupGame();
