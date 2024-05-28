@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             specialPowerAvailable = true;
             specialPowerIndicator.classList.remove('disabled');
             specialPowerIndicator.innerText = 'E disponível';
-        }, 90000);
+        }, 90000); // 1.5 minutos em milissegundos
     };
 
     const handleObstacleDamage = (obstacle) => {
@@ -409,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupEventListeners = () => {
         document.addEventListener('keydown', handleKeydown);
         document.addEventListener('keyup', handleKeyup);
+        document.addEventListener('click', handleMouseClick);
         resumeButton.addEventListener('click', togglePause);
         backToMenuButton.addEventListener('click', () => {
             window.location.href = '../../index.html';
