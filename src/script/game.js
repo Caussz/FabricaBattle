@@ -269,8 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
         healthBar.style.width = `${(health / 10) * 100}%`;
 
         if (health <= 0) {
+            const obstacleRect = obstacle.getBoundingClientRect();
             obstacle.remove();
-            generateCoins(obstacle);
+            generateCoinsAtLocation(obstacleRect.left, obstacleRect.top, obstacleRect.width, obstacleRect.height);
             checkObstacleCount();
         }
     };
@@ -388,13 +389,12 @@ document.addEventListener('DOMContentLoaded', () => {
         gameField.appendChild(coin);
     };
 
-    const generateCoins = (obstacle) => {
-        const numCoins = Math.floor(Math.random() * 3) + 1;
-        const obstacleRect = obstacle.getBoundingClientRect();
+    const generateCoinsAtLocation = (left, top, width, height) => {
+        const numCoins = Math.floor(Math.random() * 4);
         for (let i = 0; i < numCoins; i++) {
-            const left = obstacleRect.left + Math.random() * obstacleRect.width;
-            const top = obstacleRect.top + Math.random() * obstacleRect.height;
-            createCoin(left, top);
+            const coinLeft = left + Math.random() * width;
+            const coinTop = top + Math.random() * height;
+            createCoin(coinLeft, coinTop);
             checkCoinCount();
         }
     };
